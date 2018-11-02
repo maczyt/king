@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "doc:dev": "vuepress dev doc"
   },
   "repository": "git@github.com:maczyt/king.git",
   "author": "maczyt <369280416@qq.com>",
@@ -13,6 +14,7 @@
     "babel-preset-latest": "^6.24.1",
     "rollup": "^0.66.6",
     "rollup-plugin-babel": "^4.0.3",
-    "rollup-plugin-node-resolve": "^3.4.0"
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "vuepress": "^0.14.4"
   }
 }

@@ -24,6 +24,10 @@ export default function (King) {
 
   King.prototype._initComputed = function () {
     const options = this.$options;
+    const computed = options.computed;
+    if (computed) {
+      console.log('computed', computed);
+    }
   };
 
   King.prototype._proxy = function (key) {

@@ -168,6 +168,10 @@
 
     King.prototype._initComputed = function () {
       const options = this.$options;
+      const computed = options.computed;
+      if (computed) {
+        console.log('computed', computed);
+      }
     };
 
     King.prototype._proxy = function (key) {
@@ -275,7 +279,6 @@
     this.name = name;
     this.expOrFn = expOrFn;
     this.vm._directives.push(this);
-    // this.update()
   }
 
 
