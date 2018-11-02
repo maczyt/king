@@ -11,7 +11,7 @@
 
 <body>
   <div class="app">
-    <p k-text="name"></p>
+    <p k-text="name + ' ' + age"></p>
   </div>
 
   <script>
@@ -19,7 +19,8 @@
       el: '.app',
       data() {
         return {
-          name: 'yutao'
+          name: 'yutao',
+          age: 25
         }
       }
     })

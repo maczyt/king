@@ -108,7 +108,7 @@
       enumerable: true,
       get: function reactiveGetter() {
         if (Dep.target) {
-          console.log(Dep.target);
+          dep.depend();
         }
         return getter ? getter.call(obj) : val;
       },
@@ -185,55 +185,189 @@
     };
   }
 
+  var text = {
+    bind() {
+      this.attr = this.el.nodeType === 1 ? 'textContent' : 'data';
+    },
+    update(value) {
+      this.el[this.attr] = value;
+    }
+  };
+
+  var Dirs = {
+    text
+  };
+
+  let uid$2 = 0;
+
+  /**
+   * 
+   * @param {*} vm 
+   * @param {*} expOrFn 
+   * @param {*} cb : 指令注册的回调函数 
+   * @param {*} options 
+   */
+  function Watcher(vm, expOrFn, cb, options) {
+    if (options) {
+      Object.assign(this, options);
+    }
+    const isFn = typeof expOrFn === 'function';
+    this.vm = vm;
+    this.expression = expOrFn;
+    this.cb = cb;
+    this.id = uid$2++;
+    this.deps = [];
+
+    this.vm._watchers.push(this);
+
+    if (isFn) {
+      this.getter = expOrFn;
+      this.setter = undefined;
+    } else {
+      this.getter = new Function(`with(this) { return ${expOrFn} }`);
+      this.setter = undefined;
+    }
+
+    this.value = this.lazy ? undefined : this.get();
+  }
+
+  Watcher.prototype.get = function () {
+    this.beforeGet();
+    let value;
+    const scope = this.vm;
+    try {
+      value = this.getter.call(scope);
+    } catch (e) {}
+    this.afterGet();
+    return value;
+  };
+
+  Watcher.prototype.beforeGet = function () {
+    Dep.target = this;
+  };
+
+  Watcher.prototype.afterGet = function () {
+    Dep.target = null;
+  };
+
+  Watcher.prototype.addDep = function (dep) {
+    if (this.deps.some(d => {
+        d.id === dep.id;
+      })) ; else {
+      this.deps.push(dep);
+      dep.addSub(this);
+    }
+  };
+
+  Watcher.prototype.update = function () {
+    const oldVal = this.value;
+    let value = this.get();
+    if (oldVal === value) {
+      return;
+    }
+    this.value = value;
+    this.cb.call(this.vm, value, oldVal);
+  };
+
+  function Directive(name, expOrFn, el, vm) {
+    this.el = el;
+    this.vm = vm;
+    this.name = name;
+    this.expOrFn = expOrFn;
+    this.vm._directives.push(this);
+    // this.update()
+  }
+
+
+  Directive.prototype._bind = function () {
+    const name = this.name;
+    const def = Dirs[name];
+
+    if (typeof def === 'function') {
+      this.update = def;
+    } else {
+      Object.assign(this, def);
+    }
+
+    if (this.bind) {
+      this.bind();
+    }
+
+    if (this.update) {
+      const self = this;
+      this._update = function (val, oldVal) {
+        self.update(val, oldVal);
+      };
+    } else {
+      this._update = function noop() {};
+    }
+
+    const watcher = this._watcher = new Watcher(this.vm, this.expOrFn, this._update);
+
+    if (this.update) {
+      this.update(watcher.value);
+    }
+  };
+
   const dirRE = /^k-([^.:]+)/;
 
   function lifecycleMixin (King) {
     King.prototype._compile = function (el) {
-      compileRoot(el);
+      compileRoot(el, this);
     };
   }
 
-  function compileNode(node) {
+  function compileNode(node, vm) {
     const type = node.nodeType;
     if (type === 1 && node.tagName !== 'SCRIPT') {
-      return compileElement(node);
+      return compileElement(node, vm);
     } else if (type === 3 && node.data.trim()) {
-      return compileTextNode(node);
+      return compileTextNode(node, vm);
     }
   }
 
-  function compileRoot(el) {
-    compileNode(el);
-    compileNodeList(el.childNodes);
+  function compileRoot(el, vm) {
+    compileNode(el, vm);
+    compileNodeList(el.childNodes, vm);
   }
 
-  function compileNodeList(nodeList) {
-    console.log(nodeList);
+  function compileNodeList(nodeList, vm) {
     Array.from(nodeList).forEach(node => {
+      compileNode(node, vm);
       if (node.nodeType === 1 && node.tagName !== 'SCRIPT' && node.hasChildNodes()) {
-        compileNodeList(node.childNodes);
+        compileNodeList(node.childNodes, vm);
       }
-      compileNode(node);
     });
   }
 
-  function compileElement(el) {
+  function compileElement(el, vm) {
     const attrs = Array.from(el.attributes);
 
     let name;
     let value;
+    let expression;
     let dirName;
+    let dirs = [];
+    let dir;
     attrs.forEach(attr => {
       name = attr.name;
       value = attr.value;
+      expression = value;
       if (name.match(dirRE)) {
         dirName = name.match(dirRE)[1];
-        console.log('dirName', dirName);
+        dir = new Directive(dirName, expression, el, vm);
+        dirs.push(dir);
       }
     });
+
+    if (dirs.length) {
+      dirs.forEach(dir => {
+        dir._bind();
+      });
+    }
   }
 
-  function compileTextNode(node) {
+  function compileTextNode(node, vm) {
     console.log('compile text node');
   }
 

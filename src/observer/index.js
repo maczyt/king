@@ -39,7 +39,7 @@ function defineReactive(obj, key, val) {
     enumerable: true,
     get: function reactiveGetter() {
       if (Dep.target) {
-        console.log(Dep.target);
+        dep.depend();
       }
       return getter ? getter.call(obj) : val;
     },

@@ -20,6 +20,8 @@ function Watcher(vm, expOrFn, cb, options) {
   this.id = uid++;
   this.deps = [];
 
+  this.vm._watchers.push(this);
+
   if (isFn) {
     this.getter = expOrFn;
     this.setter = undefined;
@@ -57,6 +59,7 @@ Watcher.prototype.addDep = function (dep) {
     // 已添加了
   } else {
     this.deps.push(dep);
+    dep.addSub(this);
   }
 };
 
