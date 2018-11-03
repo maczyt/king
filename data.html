@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Data 处理 | Vue源码解析</title>
+    <meta name="description" content="">
+    
+    
+    <link rel="preload" href="./assets/css/styles.d19c15b0.css" as="style"><link rel="preload" href="./assets/js/app.d19c15b0.js" as="script"><link rel="preload" href="./assets/js/4.4eab640d.js" as="script"><link rel="prefetch" href="./assets/css/1.styles.2eccf07e.css"><link rel="prefetch" href="./assets/css/2.styles.a2bd3099.css"><link rel="prefetch" href="./assets/js/1.2eccf07e.js"><link rel="prefetch" href="./assets/js/2.a2bd3099.js"><link rel="prefetch" href="./assets/js/3.a34ad963.js">
+    <link rel="stylesheet" href="./assets/css/1.styles.2eccf07e.css"><link rel="stylesheet" href="./assets/css/2.styles.a2bd3099.css"><link rel="stylesheet" href="./assets/css/styles.d19c15b0.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/./" class="home-link router-link-active"><!----> <span class="site-name">Vue源码解析</span></a> <div class="links" style="max-width:nullpx;"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <!----></div></header> <div class="sidebar-mask"></div> <div class="sidebar"><!---->  <ul class="sidebar-links"><li><a href="/./" class="sidebar-link">首页</a></li><li><a href="/./data.html" class="active sidebar-link">data处理</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/./data.html#具体过程" class="sidebar-link">具体过程</a></li></ul></li></ul> </div> <div class="page"> <div class="content"><h1 id="data-处理"><a href="#data-处理" aria-hidden="true" class="header-anchor">#</a> Data 处理</h1> <div class="language-js extra-class"><div class="highlight-lines"><br><br><div class="highlighted"> </div><div class="highlighted"> </div><div class="highlighted"> </div><div class="highlighted"> </div><div class="highlighted"> </div><div class="highlighted"> </div><br><br><br><br><br><br><br></div><pre class="language-js"><code><span class="token keyword">const</span> vm <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">King</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  el<span class="token punctuation">:</span> <span class="token string">&quot;.app&quot;</span><span class="token punctuation">,</span>
+  <span class="token function">data</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token punctuation">{</span>
+      name<span class="token punctuation">:</span> <span class="token string">&quot;zyt&quot;</span><span class="token punctuation">,</span>
+      age<span class="token punctuation">:</span> <span class="token number">25</span>
+    <span class="token punctuation">}</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  computed<span class="token punctuation">:</span> <span class="token punctuation">{</span>
+    <span class="token function">user</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">return</span> <span class="token template-string"><span class="token string">`My name is </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token keyword">this</span><span class="token punctuation">.</span>name<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">, age is </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token keyword">this</span><span class="token punctuation">.</span>age<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">`</span></span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>上面高亮处即是我们需要处理的<code>data</code>数据，怎么处理呢？要处理成怎么样呢？</p> <p>在 vue 中，当我们修改数据，页面即会发生更新，并且页面也可以使用 input 通过 v-model 来修改 data
+所以我们需要 data 数据处理成能检测变化的(也称可观察的)</p> <h2 id="具体过程"><a href="#具体过程" aria-hidden="true" class="header-anchor">#</a> 具体过程</h2> <ol><li>首先我们创建 observer.js 文件(模块化，避免代码文件过多，最后我们将用 rollup 打包)</li> <li>observer.js 代码, 我将用 typescript 来表现，为了表示类型</li></ol> <div class="language-ts extra-class"><pre class="language-ts"><code><span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">Observer</span><span class="token punctuation">(</span>value<span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+
+<span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">observer</span><span class="token punctuation">(</span>value<span class="token punctuation">,</span> vm<span class="token punctuation">)</span><span class="token punctuation">:</span> Observer <span class="token punctuation">{</span>
+  <span class="token comment">// 如果所要处理的数据不是对象则直接返回，因为Object.defineProperty是针对对象的</span>
+  <span class="token comment">// 这里不会展开数组，对数组感兴趣的可以自己实现</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>value <span class="token operator">||</span> <span class="token operator">!</span><span class="token function">isObject</span><span class="token punctuation">(</span>value<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">let</span> ob<span class="token punctuation">:</span> Observer<span class="token punctuation">;</span>
+  <span class="token comment">// 如果数据已经被处理过了，那直接返回Observer</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token string">&quot;__ob__&quot;</span> <span class="token keyword">in</span> value <span class="token operator">&amp;&amp;</span> value<span class="token punctuation">.</span>__ob__ <span class="token keyword">instanceof</span> <span class="token class-name">Observer</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></div> <div class="page-edit"><!----> <!----></div> <div class="page-nav"><p class="inner"><span class="prev">
+        ←
+        <a href="/./" class="prev router-link-active">
+          首页
+        </a></span> <!----></p></div> </div> <!----></div></div>
+    <script src="./assets/js/4.4eab640d.js" defer></script><script src="./assets/js/app.d19c15b0.js" defer></script>
+  </body>
+</html>
