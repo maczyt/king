@@ -1,7 +1,7 @@
 module.exports = {
   title: 'Vue源码解析',
   descripton: '类Vue框架的从0到1',
-  base: './',
+  base: '/king/',
 
   themeConfig: {
     sidebar: [
