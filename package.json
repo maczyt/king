@@ -5,7 +5,9 @@
   "scripts": {
     "build": "rollup -c",
     "build:ts": "rollup -c ./rollup.config.ts.js",
-    "doc:dev": "vuepress dev doc"
+    "doc:dev": "vuepress dev doc",
+    "doc:build": "vuepress build doc",
+    "deploy": "gh-pages -d doc/.vuepress/dist"
   },
   "repository": "git@github.com:maczyt/king.git",
   "author": "maczyt <369280416@qq.com>",
@@ -13,6 +15,7 @@
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "babel-preset-latest": "^6.24.1",
+    "gh-pages": "^2.0.1",
     "rollup": "^0.66.6",
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-node-resolve": "^3.4.0",
