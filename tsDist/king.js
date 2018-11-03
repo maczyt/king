@@ -131,6 +131,71 @@
       });
   }
 
+  var uid$2 = 0;
+  var Watcher = /** @class */ (function () {
+      function Watcher(vm, expOrFn, cb, options) {
+          this.id = uid$2++;
+          this.vm = vm;
+          this.deps = [];
+          this.expOrFn = expOrFn;
+          this.cb = cb;
+          this.vm._watchers.push(this);
+          if (options) {
+              Object.assign(this, options);
+          }
+          this.dirty = this["lazy"];
+          this.value = this["lazy"] ? undefined : this.get();
+      }
+      Watcher.prototype.get = function () {
+          this.beforeGet();
+          var isFn = typeof this.expOrFn === "function";
+          var scope = this.vm;
+          var value = isFn
+              ? this.expOrFn.call(scope)
+              : new Function("with(this) { return " + this.expOrFn + " }").call(scope);
+          this.afterGet();
+          return value;
+      };
+      Watcher.prototype.beforeGet = function () {
+          Dep.target = this;
+      };
+      Watcher.prototype.afterGet = function () {
+          Dep.target = null;
+      };
+      Watcher.prototype.update = function () {
+          var oldValue = this.value;
+          if (this["lazy"]) {
+              this.dirty = true;
+          }
+          else {
+              this.cb.call(this.vm, this.get(), oldValue);
+          }
+      };
+      Watcher.prototype.addDep = function (dep) {
+          if (this.deps.some(function (d) {
+              return d.id === dep.id;
+          })) {
+              return;
+          }
+          this.deps.push(dep);
+          dep.addSub(this);
+      };
+      Watcher.prototype.evaluate = function () {
+          // 不破坏data指向
+          var current = Dep.target;
+          this.value = this.get();
+          // 防止再次重复执行
+          this.dirty = false;
+          Dep.target = current;
+      };
+      Watcher.prototype.depend = function () {
+          this.deps.forEach(function (dep) {
+              dep.depend();
+          });
+      };
+      return Watcher;
+  }());
+
   function stateMixin (King) {
       King.prototype._initState = function () {
           this._initData();
@@ -154,6 +219,37 @@
       };
       King.prototype._initComputed = function () {
           // 本次只实现getter，不实现setter
+          var options = this.$options;
+          var computed = options.computed;
+          if (computed) {
+              for (var key in computed) {
+                  var userDef = computed[key];
+                  var def = {
+                      enumerable: true,
+                      configurable: true
+                  };
+                  // 本次只实现该选项
+                  if (typeof userDef === "function") {
+                      def["get"] = makeComputedGetter(userDef, this);
+                      def["set"] = function noop() { };
+                  }
+                  Object.defineProperty(this, key, def);
+              }
+          }
+          function makeComputedGetter(getter, vm) {
+              var watcher = new Watcher(vm, getter, null, {
+                  lazy: true
+              });
+              return function computedGetter() {
+                  if (watcher.dirty) {
+                      watcher.evaluate();
+                  }
+                  if (Dep.target) {
+                      watcher.depend();
+                  }
+                  return watcher.value;
+              };
+          }
       };
       /**
        * 代理访问 - 代理模式
@@ -185,55 +281,6 @@
   var Dirs = {
       text: text
   };
-
-  var uid$2 = 0;
-  var Watcher = /** @class */ (function () {
-      function Watcher(vm, expOrFn, cb, options) {
-          this.id = uid$2++;
-          this.vm = vm;
-          this.deps = [];
-          this.expOrFn = expOrFn;
-          this.cb = cb;
-          this.vm._watchers.push(this);
-          if (options) {
-              Object.assign(this, options);
-          }
-          this.value = this["lazy"] ? undefined : this.get();
-      }
-      Watcher.prototype.get = function () {
-          this.beforeGet();
-          var isFn = typeof this.expOrFn === "function";
-          var scope = this.vm;
-          var value = isFn
-              ? this.expOrFn.call(scope)
-              : new Function("with(this) { return " + this.expOrFn + " }").call(scope);
-          this.afterGet();
-          return value;
-      };
-      Watcher.prototype.beforeGet = function () {
-          Dep.target = this;
-      };
-      Watcher.prototype.afterGet = function () {
-          Dep.target = null;
-      };
-      Watcher.prototype.update = function () {
-          var oldValue = this.value;
-          if (this["lazy"]) ;
-          else {
-              this.cb.call(this.vm, this.get(), oldValue);
-          }
-      };
-      Watcher.prototype.addDep = function (dep) {
-          if (this.deps.some(function (d) {
-              return d.id === dep.id;
-          })) {
-              return;
-          }
-          this.deps.push(dep);
-          dep.addSub(this);
-      };
-      return Watcher;
-  }());
 
   var Directive = /** @class */ (function () {
       function Directive(name, expOrFn, el, vm) {

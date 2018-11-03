@@ -1,4 +1,6 @@
 import { observer } from "../../observer";
+import Watcher from "../../watcher";
+import Dep from "../../dep";
 
 export default function(King) {
   King.prototype._initState = function() {
@@ -26,6 +28,43 @@ export default function(King) {
 
   King.prototype._initComputed = function() {
     // 本次只实现getter，不实现setter
+    const options = this.$options;
+    const computed = options.computed;
+
+    if (computed) {
+      for (let key in computed) {
+        const userDef = computed[key];
+        let def = {
+          enumerable: true,
+          configurable: true
+        };
+
+        // 本次只实现该选项
+        if (typeof userDef === "function") {
+          def["get"] = makeComputedGetter(userDef, this);
+          def["set"] = function noop() {};
+        } else {
+        }
+
+        Object.defineProperty(this, key, def);
+      }
+    }
+
+    function makeComputedGetter(getter, vm) {
+      let watcher = new Watcher(vm, getter, null, {
+        lazy: true
+      });
+
+      return function computedGetter() {
+        if (watcher.dirty) {
+          watcher.evaluate();
+        }
+        if (Dep.target) {
+          watcher.depend();
+        }
+        return watcher.value;
+      };
+    }
   };
 
   /**

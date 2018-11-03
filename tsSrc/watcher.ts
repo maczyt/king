@@ -8,6 +8,7 @@ class Watcher implements WatcherIF {
   vm: KingIF;
   cb: Function;
   deps: Array<DepIF>;
+  dirty: Boolean;
   constructor(vm, expOrFn, cb, options?) {
     this.id = uid++;
     this.vm = vm;
@@ -18,6 +19,8 @@ class Watcher implements WatcherIF {
     if (options) {
       Object.assign(this, options);
     }
+
+    this.dirty = this["lazy"];
 
     this.value = this["lazy"] ? undefined : this.get();
   }
@@ -44,6 +47,7 @@ class Watcher implements WatcherIF {
   update() {
     let oldValue = this.value;
     if (this["lazy"]) {
+      this.dirty = true;
     } else {
       this.cb.call(this.vm, this.get(), oldValue);
     }
@@ -59,6 +63,21 @@ class Watcher implements WatcherIF {
     }
     this.deps.push(dep);
     dep.addSub(this);
+  }
+
+  evaluate() {
+    // 不破坏data指向
+    const current = Dep.target;
+    this.value = this.get();
+    // 防止再次重复执行
+    this.dirty = false;
+    Dep.target = current;
+  }
+
+  depend() {
+    this.deps.forEach(dep => {
+      dep.depend();
+    });
   }
 }
 
