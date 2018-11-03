@@ -19,21 +19,37 @@ class Watcher implements WatcherIF {
     if (options) {
       Object.assign(this, options);
     }
-
     this.dirty = this["lazy"];
+    const isFn = typeof expOrFn === "function";
+    if (isFn) {
+      this["getter"] = expOrFn;
+      this["setter"] = undefined;
+    } else {
+      this["getter"] = new Function(`with(this) { return ${this.expOrFn} }`);
+      this["setter"] = this["twoWay"]
+        ? new Function("value", `with(this) { ${this.expOrFn} = value }`)
+        : function noop() {};
+    }
 
     this.value = this["lazy"] ? undefined : this.get();
   }
 
   get() {
     this.beforeGet();
-    const isFn = typeof this.expOrFn === "function";
     const scope = this.vm;
-    let value = isFn
-      ? this.expOrFn.call(scope)
-      : new Function(`with(this) { return ${this.expOrFn} }`).call(scope);
+    let value;
+    try {
+      value = this["getter"].call(scope);
+    } catch (e) {}
     this.afterGet();
     return value;
+  }
+
+  set(value) {
+    const scope = this.vm;
+    try {
+      this["setter"].call(scope, value);
+    } catch (e) {}
   }
 
   beforeGet() {

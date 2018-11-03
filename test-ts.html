@@ -13,6 +13,9 @@
   <div class="app">
     <p k-text="name + ' ' + age + ' ' + name"></p>
     <p k-text="user"></p>
+    <p k-html="hmltContent"></p>
+    <input type="text" k-model="msg">
+    <p k-text="msg"></p>
   </div>
 
   <script>
@@ -21,7 +24,9 @@
       data() {
         return {
           name: 'yutao',
-          age: 25
+          age: 25,
+          hmltContent: '<h2>Big Show</h2>',
+          msg: 'zyt is good man'
         }
       },
       computed: {

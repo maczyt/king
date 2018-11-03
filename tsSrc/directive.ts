@@ -45,11 +45,18 @@ class Directive implements DirectiveIF {
     const watcher = (this._watcher = new Watcher(
       this.vm,
       this.expOrFn,
-      this["_update"]
+      this["_update"],
+      {
+        twoWay: this.name === "model"
+      }
     ));
     if (this["update"]) {
       this["update"](watcher.value);
     }
+  }
+
+  set(value) {
+    this._watcher.set(value);
   }
 }
 

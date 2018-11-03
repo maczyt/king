@@ -39,6 +39,10 @@ interface WatcherIF {
   deps: Array<DepIF>;
   update();
   addDep(dep);
+  beforeGet();
+  get();
+  afterGet();
+  set(value);
 }
 /* Watcher end */
 

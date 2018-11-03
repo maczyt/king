@@ -144,17 +144,36 @@
               Object.assign(this, options);
           }
           this.dirty = this["lazy"];
+          var isFn = typeof expOrFn === "function";
+          if (isFn) {
+              this["getter"] = expOrFn;
+              this["setter"] = undefined;
+          }
+          else {
+              this["getter"] = new Function("with(this) { return " + this.expOrFn + " }");
+              this["setter"] = this["twoWay"]
+                  ? new Function("value", "with(this) { " + this.expOrFn + " = value }")
+                  : function noop() { };
+          }
           this.value = this["lazy"] ? undefined : this.get();
       }
       Watcher.prototype.get = function () {
           this.beforeGet();
-          var isFn = typeof this.expOrFn === "function";
           var scope = this.vm;
-          var value = isFn
-              ? this.expOrFn.call(scope)
-              : new Function("with(this) { return " + this.expOrFn + " }").call(scope);
+          var value;
+          try {
+              value = this["getter"].call(scope);
+          }
+          catch (e) { }
           this.afterGet();
           return value;
+      };
+      Watcher.prototype.set = function (value) {
+          var scope = this.vm;
+          try {
+              this["setter"].call(scope, value);
+          }
+          catch (e) { }
       };
       Watcher.prototype.beforeGet = function () {
           Dep.target = this;
@@ -278,8 +297,36 @@
       }
   };
 
+  var html = {
+      bind: function () {
+          this.attr = "innerHTML";
+      },
+      update: function (value) {
+          this.el[this.attr] = value;
+      }
+  };
+  // 只有元素节点才有
+
+  // 双向绑定实现
+  // 只实现input text
+  var model = {
+      bind: function () {
+          var self = this;
+          this.el.addEventListener("input", function (event) {
+              var target = event.target;
+              var value = target.value;
+              self.set(value);
+          }, false);
+      },
+      update: function (value) {
+          this.el.value = value;
+      }
+  };
+
   var Dirs = {
-      text: text
+      text: text,
+      html: html,
+      model: model
   };
 
   var Directive = /** @class */ (function () {
@@ -314,10 +361,15 @@
           else {
               this["_update"] = function noop() { };
           }
-          var watcher = (this._watcher = new Watcher(this.vm, this.expOrFn, this["_update"]));
+          var watcher = (this._watcher = new Watcher(this.vm, this.expOrFn, this["_update"], {
+              twoWay: this.name === "model"
+          }));
           if (this["update"]) {
               this["update"](watcher.value);
           }
+      };
+      Directive.prototype.set = function (value) {
+          this._watcher.set(value);
       };
       return Directive;
   }());
