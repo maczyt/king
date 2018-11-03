@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "es6",
+      "dom.iterable",
+      "scripthost"
+    ]
+  }
+}

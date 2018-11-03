@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="./tsDist/king.js"></script>
+</head>
+
+<body>
+  <div class="app">
+    <p k-text="name + ' ' + age + ' ' + name"></p>
+  </div>
+
+  <script>
+    const vm = new King({
+      el: '.app',
+      data() {
+        return {
+          name: 'yutao',
+          age: 25
+        }
+      },
+      computed: {
+        user() {
+          return `Hello ${this.name}`;
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>

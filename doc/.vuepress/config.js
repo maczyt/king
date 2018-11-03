@@ -1,4 +1,12 @@
 module.exports = {
-  title: 'King源码解析',
-  descripton: '类Vue框架的从0到1'
+  title: 'Vue源码解析',
+  descripton: '类Vue框架的从0到1',
+
+  themeConfig: {
+    sidebar: [
+      ['/', '首页'],
+      ['data.md', 'data处理']
+    ],
+  }
+
 }
