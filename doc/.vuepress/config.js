@@ -8,6 +8,7 @@ module.exports = {
       ['/', '首页'],
       ['data.md', 'data处理']
     ],
-  }
+  },
 
+  plugins: ['@vuepress/back-to-top']
 }
