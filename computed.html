@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>computed 处理 | King源码解析</title>
+    <meta name="description" content="">
+    
+    
+    <link rel="preload" href="/king/assets/css/styles.dbf75c9d.css" as="style"><link rel="preload" href="/king/assets/js/app.dbf75c9d.js" as="script"><link rel="preload" href="/king/assets/js/5.a563c138.js" as="script"><link rel="prefetch" href="/king/assets/css/1.styles.2eccf07e.css"><link rel="prefetch" href="/king/assets/css/2.styles.a2bd3099.css"><link rel="prefetch" href="/king/assets/js/1.2eccf07e.js"><link rel="prefetch" href="/king/assets/js/2.a2bd3099.js"><link rel="prefetch" href="/king/assets/js/3.ebab6086.js"><link rel="prefetch" href="/king/assets/js/4.635ae5dd.js"><link rel="prefetch" href="/king/assets/js/6.df54c1f7.js">
+    <link rel="stylesheet" href="/king/assets/css/1.styles.2eccf07e.css"><link rel="stylesheet" href="/king/assets/css/2.styles.a2bd3099.css"><link rel="stylesheet" href="/king/assets/css/styles.dbf75c9d.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/king/" class="home-link router-link-active"><!----> <span class="site-name">King源码解析</span></a> <div class="links" style="max-width:nullpx;"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <!----></div></header> <div class="sidebar-mask"></div> <div class="sidebar"><!---->  <ul class="sidebar-links"><li><a href="/king/" class="sidebar-link">首页</a></li><li><a href="/king/data.html" class="sidebar-link">data处理</a></li><li><a href="/king/compile.html" class="sidebar-link">html处理</a></li><li><a href="/king/computed.html" class="active sidebar-link">computed处理</a></li></ul> </div> <div class="page"> <div class="content"><h1 id="computed-处理"><a href="#computed-处理" aria-hidden="true" class="header-anchor">#</a> computed 处理</h1> <div class="language-js extra-class"><div class="highlight-lines"><br><br><br><br><br><br><br><br><div class="highlighted"> </div><div class="highlighted"> </div><div class="highlighted"> </div><div class="highlighted"> </div><div class="highlighted"> </div><br><br></div><pre class="language-js"><code><span class="token keyword">const</span> vm <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">King</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  el<span class="token punctuation">:</span> <span class="token string">&quot;.app&quot;</span><span class="token punctuation">,</span>
+  <span class="token function">data</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token punctuation">{</span>
+      name<span class="token punctuation">:</span> <span class="token string">&quot;zyt&quot;</span><span class="token punctuation">,</span>
+      age<span class="token punctuation">:</span> <span class="token number">25</span>
+    <span class="token punctuation">}</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  computed<span class="token punctuation">:</span> <span class="token punctuation">{</span>
+    <span class="token function">user</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">return</span> <span class="token template-string"><span class="token string">`My name is </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token keyword">this</span><span class="token punctuation">.</span>name<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">, age is </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token keyword">this</span><span class="token punctuation">.</span>age<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">`</span></span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>和对<code>data</code>处理类似，我们使用<code>for in</code>遍历处理(这里不实现<code>{ get, set }</code>方式)，可以知道每一项都是一个<code>Function</code></p> <p>并且会把<code>user</code>绑定到<code>vm</code>上，这样解析到指令的表达式为<code>user</code>时，会触发<code>user</code>的<code>getter</code></p> <p>我们使用<code>Watcher</code>来进行处理，而表达式就是该<code>Function</code>，当执行表达式的时候，会去触发数据的<code>getter</code>，这个时候把该<code>Watcher</code>与当前 Dep 绑定，
+所以如果<code>name</code>或<code>age</code>改变，也会通知<code>user</code>，从而去通知与<code>user</code>绑定指令去更新
+`</p> <div class="warning custom-block"><p class="custom-block-title">随便一说 😂</p> <p>说实话这里不太好说清楚，还是等我来细细为大家呈现吧</p></div></div> <div class="page-edit"><!----> <!----></div> <div class="page-nav"><p class="inner"><span class="prev">
+        ←
+        <a href="/king/compile.html" class="prev">
+          html处理
+        </a></span> <!----></p></div> </div> <!----></div></div>
+    <script src="/king/assets/js/5.a563c138.js" defer></script><script src="/king/assets/js/app.dbf75c9d.js" defer></script>
+  </body>
+</html>

@@ -3,15 +3,16 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Vue 源码分析 | Vue源码解析</title>
+    <title>King 源码分析 | King源码解析</title>
     <meta name="description" content="">
     
     
-    <link rel="preload" href="/king/assets/css/styles.48ff56ad.css" as="style"><link rel="preload" href="/king/assets/js/app.48ff56ad.js" as="script"><link rel="preload" href="/king/assets/js/3.a34ad963.js" as="script"><link rel="prefetch" href="/king/assets/css/1.styles.2eccf07e.css"><link rel="prefetch" href="/king/assets/css/2.styles.a2bd3099.css"><link rel="prefetch" href="/king/assets/js/1.2eccf07e.js"><link rel="prefetch" href="/king/assets/js/2.a2bd3099.js"><link rel="prefetch" href="/king/assets/js/4.4eab640d.js">
-    <link rel="stylesheet" href="/king/assets/css/1.styles.2eccf07e.css"><link rel="stylesheet" href="/king/assets/css/2.styles.a2bd3099.css"><link rel="stylesheet" href="/king/assets/css/styles.48ff56ad.css">
+    <link rel="preload" href="/king/assets/css/styles.dbf75c9d.css" as="style"><link rel="preload" href="/king/assets/js/app.dbf75c9d.js" as="script"><link rel="preload" href="/king/assets/js/3.ebab6086.js" as="script"><link rel="prefetch" href="/king/assets/css/1.styles.2eccf07e.css"><link rel="prefetch" href="/king/assets/css/2.styles.a2bd3099.css"><link rel="prefetch" href="/king/assets/js/1.2eccf07e.js"><link rel="prefetch" href="/king/assets/js/2.a2bd3099.js"><link rel="prefetch" href="/king/assets/js/4.635ae5dd.js"><link rel="prefetch" href="/king/assets/js/5.a563c138.js"><link rel="prefetch" href="/king/assets/js/6.df54c1f7.js">
+    <link rel="stylesheet" href="/king/assets/css/1.styles.2eccf07e.css"><link rel="stylesheet" href="/king/assets/css/2.styles.a2bd3099.css"><link rel="stylesheet" href="/king/assets/css/styles.dbf75c9d.css">
   </head>
   <body>
-    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/king/" class="home-link router-link-exact-active router-link-active"><!----> <span class="site-name">Vue源码解析</span></a> <div class="links" style="max-width:nullpx;"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <!----></div></header> <div class="sidebar-mask"></div> <div class="sidebar"><!---->  <ul class="sidebar-links"><li><a href="/king/" class="active sidebar-link">首页</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/king/#讲解风格" class="sidebar-link">讲解风格</a></li><li class="sidebar-sub-header"><a href="/king/#要实现的代码" class="sidebar-link">要实现的代码</a></li></ul></li><li><a href="/king/data.html" class="sidebar-link">data处理</a></li></ul> </div> <div class="page"> <div class="content"><h1 id="vue-源码分析"><a href="#vue-源码分析" aria-hidden="true" class="header-anchor">#</a> Vue 源码分析</h1> <blockquote><p>来大华已有 10 个月之余，来之后一直使用<code>vue.js</code>全家桶干活，对于平常出现的 bug 基本已达到了 90%可以很快解决，加上组里同事的捧场(<strong>涛神</strong>)，个人虚荣心得到很大的满足，但是我知道自己还有很多的不足，秉着考察自己对<code>vue.js</code>的掌握+为组里小伙伴送点福利的，准备了本次分享，希望在场的能有所收获(没来的就不管了 😕)</p></blockquote> <div class="tip custom-block"><p class="custom-block-title">需要提前准备的知识点</p> <ol><li><code>Object.defineProperty</code> (Vue3 使用 ES6 的 Proxy 重写)</li> <li>DOM 节点的相关知识: nodeType、tagName、attributes、childNodes 文本节点、元素节点、注释节点</li> <li>发布订阅者设计模式</li></ol></div> <h2 id="讲解风格"><a href="#讲解风格" aria-hidden="true" class="header-anchor">#</a> 讲解风格</h2> <div class="warning custom-block"><p class="custom-block-title">背景(现状)</p> <p>目前市面上已有很多关于讲解 Vue.js 源码的文章和教程，相信看过的，都会知道数据的双向绑定原理，但经常到这里就结束了，想知道更多就没了~</p> <p>或者对每个知识都讲一点，这样又没法连起来，导致我们无法看到实现的例子，从而迷失在“浩瀚”的代码中，选择放弃。</p></div> <div class="tip custom-block"><p class="custom-block-title">我的方式</p> <p>我将按着构造函数一步一步讲解，照着讲解编写出属于我们的<code>MVVM</code>框架。当然是阉割版的，毕竟完整版我也不会 😄</p></div> <h2 id="要实现的代码"><a href="#要实现的代码" aria-hidden="true" class="header-anchor">#</a> 要实现的代码</h2> <div class="language-html extra-class"><pre class="language-html"><code><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">&quot;</span>app<span class="token punctuation">&quot;</span></span><span class="token punctuation">&gt;</span></span>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/king/" class="home-link router-link-exact-active router-link-active"><!----> <span class="site-name">King源码解析</span></a> <div class="links" style="max-width:nullpx;"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <!----></div></header> <div class="sidebar-mask"></div> <div class="sidebar"><!---->  <ul class="sidebar-links"><li><a href="/king/" class="active sidebar-link">首页</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/king/#讲解风格" class="sidebar-link">讲解风格</a></li><li class="sidebar-sub-header"><a href="/king/#要实现的代码" class="sidebar-link">要实现的代码</a></li></ul></li><li><a href="/king/data.html" class="sidebar-link">data处理</a></li><li><a href="/king/compile.html" class="sidebar-link">html处理</a></li><li><a href="/king/computed.html" class="sidebar-link">computed处理</a></li></ul> </div> <div class="page"> <div class="content"><h1 id="king-源码分析"><a href="#king-源码分析" aria-hidden="true" class="header-anchor">#</a> King 源码分析</h1> <blockquote><p>来大华已有 10 个月之余，来之后一直使用<code>vue.js</code>全家桶干活，对于平常出现的 bug 基本已达到了 90%可以很快解决，加上组里同事的捧场(<strong>涛神</strong>)，个人虚荣心得到很大的满足，但是我知道自己还有很多的不足，秉着考察自己对<code>vue.js</code>的掌握+为组里小伙伴送点福利的，准备了本次分享，希望在场的能有所收获(没来的就不管了 😕)</p></blockquote> <div class="tip custom-block"><p class="custom-block-title">需要提前准备的知识点</p> <ol><li><code>Object.defineProperty</code> (Vue3 使用 ES6 的 Proxy 重写)</li> <li>DOM 节点的相关知识: nodeType、tagName、attributes、childNodes 文本节点、元素节点、注释节点</li> <li>设计模式
+<ul><li>发布订阅者(观察者)</li> <li>代理</li></ul></li></ol></div> <h2 id="讲解风格"><a href="#讲解风格" aria-hidden="true" class="header-anchor">#</a> 讲解风格</h2> <div class="warning custom-block"><p class="custom-block-title">背景(现状)</p> <p>目前市面上已有很多关于讲解 Vue.js 源码的文章和教程，相信看过的，都会知道数据的双向绑定原理，但经常到这里就结束了，想知道更多就没了~</p> <p>或者对每个知识都讲一点，这样又没法连起来，导致我们无法看到实现的例子，从而迷失在“浩瀚”的代码中，选择放弃。</p></div> <div class="tip custom-block"><p class="custom-block-title">我的方式</p> <p>我将按着构造函数一步一步讲解，照着讲解编写出属于我们的<code>MVVM</code>框架。当然是阉割版的，毕竟完整版我也不会 😄</p></div> <h2 id="要实现的代码"><a href="#要实现的代码" aria-hidden="true" class="header-anchor">#</a> 要实现的代码</h2> <div class="language-html extra-class"><pre class="language-html"><code><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">&quot;</span>app<span class="token punctuation">&quot;</span></span><span class="token punctuation">&gt;</span></span>
   <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span> <span class="token attr-name">k-text</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">&quot;</span>name<span class="token punctuation">&quot;</span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">&gt;</span></span>
   <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span> <span class="token attr-name">k-text</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">&quot;</span>age<span class="token punctuation">&quot;</span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">&gt;</span></span>
   <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span> <span class="token attr-name">k-text</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">&quot;</span>user<span class="token punctuation">&quot;</span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">&gt;</span></span>
@@ -30,11 +31,92 @@
     <span class="token punctuation">}</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-</code></pre></div><p>当我们调用<code>new King()</code>，King 会:</p> <ol><li>初始实例状态</li> <li>编译 html，解析指令</li></ol> <table><thead><tr><th style="text-align:center">初始状态</th> <th style="text-align:center">编译 html</th></tr></thead> <tbody><tr><td style="text-align:center"><s>props: 父子组件 prop</s></td> <td style="text-align:center">深度优先遍历 DOM，识别指令或者<code>{{}}</code>渲染的文本</td></tr> <tr><td style="text-align:center">data</td> <td style="text-align:center"></td></tr> <tr><td style="text-align:center">computed</td> <td style="text-align:center"></td></tr></tbody></table> <p>由于不打算讲解父子组件，所以把 props 略过，让我们从 data 开始吧</p></div> <div class="page-edit"><!----> <!----></div> <div class="page-nav"><p class="inner"><!----> <span class="next"><a href="/king/data.html">
+</code></pre></div><p>当我们调用<code>new King()</code>，King 会:</p> <ol><li>初始实例状态</li> <li>编译 html，解析指令</li></ol> <table><thead><tr><th style="text-align:center">初始状态</th> <th style="text-align:center">编译 html</th></tr></thead> <tbody><tr><td style="text-align:center"><s>props: 父子组件 prop</s></td> <td style="text-align:center">深度优先遍历 DOM，识别指令或者<code>{{}}</code>渲染的文本</td></tr> <tr><td style="text-align:center">data</td> <td style="text-align:center"></td></tr> <tr><td style="text-align:center">computed</td> <td style="text-align:center"></td></tr></tbody></table> <p>由于不打算讲解父子组件，所以把 props 略过，让我们从 data 开始吧，先大致看下<code>Schema</code></p> <div class="language-ts extra-class"><pre class="language-ts"><code><span class="token comment">/* Obserber start */</span>
+
+<span class="token keyword">interface</span> <span class="token class-name">ObserverIF</span> <span class="token punctuation">{</span>
+  value<span class="token punctuation">:</span> <span class="token builtin">any</span><span class="token punctuation">;</span>
+  dep<span class="token punctuation">:</span> DepIF<span class="token punctuation">;</span>
+  <span class="token comment">// observer obj</span>
+  <span class="token function">walk</span><span class="token punctuation">(</span>obj<span class="token punctuation">:</span> object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">// observer obj key</span>
+  <span class="token function">convert</span><span class="token punctuation">(</span>obj<span class="token punctuation">:</span> object<span class="token punctuation">,</span> key<span class="token punctuation">:</span> <span class="token builtin">string</span><span class="token punctuation">,</span> val<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment">/* Obserber end */</span>
+
+<span class="token comment">/* Dep start */</span>
+<span class="token comment">// 发布者</span>
+<span class="token keyword">interface</span> <span class="token class-name">DepIF</span> <span class="token punctuation">{</span>
+  subs<span class="token punctuation">:</span> <span class="token builtin">Array</span><span class="token operator">&lt;</span>WatcherIF<span class="token operator">&gt;</span><span class="token punctuation">;</span>
+  id<span class="token punctuation">:</span> <span class="token builtin">number</span><span class="token punctuation">;</span>
+  <span class="token comment">// 添加订阅者</span>
+  <span class="token function">addSub</span><span class="token punctuation">(</span>sub<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">// 删除订阅者</span>
+  <span class="token function">removeSub</span><span class="token punctuation">(</span>sub<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">// 告诉当前订阅者可以把我添加到你订阅的列表中</span>
+  <span class="token function">depend</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">// 通知订阅者更新吧</span>
+  <span class="token function">notify</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token comment">/* Dep end */</span>
+
+<span class="token comment">/* Watcher start */</span>
+<span class="token comment">// 订阅者</span>
+<span class="token keyword">interface</span> <span class="token class-name">WatcherIF</span> <span class="token punctuation">{</span>
+  <span class="token comment">// 绑定的expression值</span>
+  value<span class="token punctuation">:</span> <span class="token builtin">any</span><span class="token punctuation">;</span>
+  expOrFn<span class="token punctuation">:</span> <span class="token builtin">Function</span> <span class="token operator">|</span> String<span class="token punctuation">;</span>
+  vm<span class="token punctuation">:</span> KingIF<span class="token punctuation">;</span>
+  <span class="token comment">// 指令绑定的回调函数</span>
+  cb<span class="token punctuation">:</span> <span class="token builtin">Function</span><span class="token punctuation">;</span>
+  deps<span class="token punctuation">:</span> <span class="token builtin">Array</span><span class="token operator">&lt;</span>DepIF<span class="token operator">&gt;</span><span class="token punctuation">;</span>
+  <span class="token comment">// 订阅者更新</span>
+  <span class="token function">update</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">// 添加发布者</span>
+  <span class="token function">addDep</span><span class="token punctuation">(</span>dep<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token function">beforeGet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token function">afterGet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">set</span><span class="token punctuation">(</span>value<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token function">evaluate</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token function">depend</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token comment">/* Watcher end */</span>
+
+<span class="token comment">/* Directive start */</span>
+<span class="token comment">// 指令</span>
+<span class="token keyword">interface</span> <span class="token class-name">DirectiveIF</span> <span class="token punctuation">{</span>
+  vm<span class="token punctuation">:</span> KingIF<span class="token punctuation">;</span>
+  el<span class="token punctuation">:</span> <span class="token builtin">any</span><span class="token punctuation">;</span>
+  name<span class="token punctuation">:</span> <span class="token builtin">string</span><span class="token punctuation">;</span>
+  _watcher<span class="token punctuation">:</span> WatcherIF<span class="token punctuation">;</span>
+  <span class="token function">_bind</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">// _update(val, oldVal);</span>
+<span class="token punctuation">}</span>
+<span class="token comment">/* Directive end */</span>
+
+<span class="token comment">/* King start */</span>
+<span class="token keyword">interface</span> <span class="token class-name">KingIF</span> <span class="token punctuation">{</span>
+  id<span class="token punctuation">:</span> <span class="token builtin">number</span><span class="token punctuation">;</span>
+  el<span class="token punctuation">:</span> Node<span class="token punctuation">;</span>
+  <span class="token comment">/* 内部属性 start */</span>
+  _data<span class="token punctuation">:</span> object<span class="token punctuation">;</span>
+  <span class="token comment">// 收集当前组件watcher</span>
+  _watchers<span class="token punctuation">:</span> <span class="token builtin">Array</span><span class="token operator">&lt;</span>WatcherIF<span class="token operator">&gt;</span><span class="token punctuation">;</span>
+  <span class="token comment">// 收集当前组件directive</span>
+  _directives<span class="token punctuation">:</span> <span class="token builtin">Array</span><span class="token operator">&lt;</span>DirectiveIF<span class="token operator">&gt;</span><span class="token punctuation">;</span>
+  <span class="token comment">/* 内部属性 end */</span>
+
+  <span class="token comment">/* 公共属性 start */</span>
+  $options<span class="token punctuation">:</span> object<span class="token punctuation">;</span>
+  <span class="token comment">/* 公共属性 end */</span>
+<span class="token punctuation">}</span>
+<span class="token comment">/* King end */</span>
+</code></pre></div></div> <div class="page-edit"><!----> <!----></div> <div class="page-nav"><p class="inner"><!----> <span class="next"><a href="/king/data.html">
           data处理
         </a>
         →
       </span></p></div> </div> <!----></div></div>
-    <script src="/king/assets/js/3.a34ad963.js" defer></script><script src="/king/assets/js/app.48ff56ad.js" defer></script>
+    <script src="/king/assets/js/3.ebab6086.js" defer></script><script src="/king/assets/js/app.dbf75c9d.js" defer></script>
   </body>
 </html>
