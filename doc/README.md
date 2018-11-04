@@ -1,4 +1,4 @@
-# Vue 源码分析
+# King 源码分析
 
 > 来大华已有 10 个月之余，来之后一直使用`vue.js`全家桶干活，对于平常出现的 bug 基本已达到了 90%可以很快解决，加上组里同事的捧场(**涛神**)，个人虚荣心得到很大的满足，但是我知道自己还有很多的不足，秉着考察自己对`vue.js`的掌握+为组里小伙伴送点福利的，准备了本次分享，希望在场的能有所收获(没来的就不管了 😕)
 
@@ -6,9 +6,11 @@
 
 1. `Object.defineProperty` (Vue3 使用 ES6 的 Proxy 重写)
 2. DOM 节点的相关知识: nodeType、tagName、attributes、childNodes 文本节点、元素节点、注释节点
-3. 发布订阅者设计模式
+3. 设计模式
+   - 发布订阅者(观察者)
+   - 代理
 
-   :::
+:::
 
 ## 讲解风格
 
@@ -60,4 +62,88 @@ const vm = new King({
 |           data           |                                                |
 |         computed         |                                                |
 
-由于不打算讲解父子组件，所以把 props 略过，让我们从 data 开始吧
+由于不打算讲解父子组件，所以把 props 略过，让我们从 data 开始吧，先大致看下`Schema`
+
+```ts
+/* Obserber start */
+
+interface ObserverIF {
+  value: any;
+  dep: DepIF;
+  // observer obj
+  walk(obj: object);
+  // observer obj key
+  convert(obj: object, key: string, val);
+}
+
+/* Obserber end */
+
+/* Dep start */
+// 发布者
+interface DepIF {
+  subs: Array<WatcherIF>;
+  id: number;
+  // 添加订阅者
+  addSub(sub);
+  // 删除订阅者
+  removeSub(sub);
+  // 告诉当前订阅者可以把我添加到你订阅的列表中
+  depend();
+  // 通知订阅者更新吧
+  notify();
+}
+/* Dep end */
+
+/* Watcher start */
+// 订阅者
+interface WatcherIF {
+  // 绑定的expression值
+  value: any;
+  expOrFn: Function | String;
+  vm: KingIF;
+  // 指令绑定的回调函数
+  cb: Function;
+  deps: Array<DepIF>;
+  // 订阅者更新
+  update();
+  // 添加发布者
+  addDep(dep);
+  beforeGet();
+  get();
+  afterGet();
+  set(value);
+  evaluate();
+  depend();
+}
+/* Watcher end */
+
+/* Directive start */
+// 指令
+interface DirectiveIF {
+  vm: KingIF;
+  el: any;
+  name: string;
+  _watcher: WatcherIF;
+  _bind();
+  // _update(val, oldVal);
+}
+/* Directive end */
+
+/* King start */
+interface KingIF {
+  id: number;
+  el: Node;
+  /* 内部属性 start */
+  _data: object;
+  // 收集当前组件watcher
+  _watchers: Array<WatcherIF>;
+  // 收集当前组件directive
+  _directives: Array<DirectiveIF>;
+  /* 内部属性 end */
+
+  /* 公共属性 start */
+  $options: object;
+  /* 公共属性 end */
+}
+/* King end */
+```

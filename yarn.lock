@@ -815,9 +815,9 @@
     source-map "^0.5.6"
     vue-template-es2015-compiler "^1.6.0"
 
-"@vuepress/plugin-back-to-top@^1.0.0-alpha.0":
-  version "1.0.0-alpha.0"
-  resolved "http://registry.npm.taobao.org/@vuepress/plugin-back-to-top/download/@vuepress/plugin-back-to-top-1.0.0-alpha.0.tgz#401513b39d5dd081f49404c35ab6f51002c1cca0"
+"@vuepress/plugin-back-to-top@^1.0.0-alpha.18":
+  version "1.0.0-alpha.18"
+  resolved "http://registry.npm.taobao.org/@vuepress/plugin-back-to-top/download/@vuepress/plugin-back-to-top-1.0.0-alpha.18.tgz#59eceeffa5490f4c0604b0bdab1e09df427452a0"
   dependencies:
     lodash.debounce "^4.0.8"
 

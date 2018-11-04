@@ -37,12 +37,16 @@ interface WatcherIF {
   // 指令绑定的回调函数
   cb: Function;
   deps: Array<DepIF>;
+  // 订阅者更新
   update();
+  // 添加发布者
   addDep(dep);
   beforeGet();
   get();
   afterGet();
   set(value);
+  evaluate();
+  depend();
 }
 /* Watcher end */
 
