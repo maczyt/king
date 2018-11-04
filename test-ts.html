@@ -16,6 +16,10 @@
     <p k-html="hmltContent"></p>
     <input type="text" k-model="msg">
     <p k-text="msg"></p>
+    <p :style="{
+      color: 'red'
+    }">Your style</p>
+    <p :style="myStyle">My style</p>
     <p>{{ msg }}</p>
   </div>
 
@@ -27,7 +31,10 @@
           name: 'yutao',
           age: 25,
           hmltContent: '<h2>Big Show</h2>',
-          msg: 'zyt is good man'
+          msg: 'zyt is good man',
+          myStyle: {
+            color: 'blue'
+          }
         }
       },
       computed: {

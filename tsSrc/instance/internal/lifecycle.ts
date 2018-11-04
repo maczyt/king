@@ -61,6 +61,7 @@ function compileTextNode(textNode, vm) {
 
 function parseDirectives(attrs, el, vm: KingIF) {
   const dirRE = /k-([^.:]+)/;
+  const bindRE = /^:([^.:]+)/;
   let dir;
   let dirs = [];
   let name;
@@ -75,6 +76,38 @@ function parseDirectives(attrs, el, vm: KingIF) {
       // 匹配到指令
       dirName = matched[1];
       dir = new Directive(dirName, expression, el, vm);
+      dirs.push(dir);
+    } else if ((matched = name.match(bindRE))) {
+      const bindProperty = matched[1];
+      dirName = "bind";
+      const exp = expression;
+      const fn = new Function(`return ${expression}`);
+      try {
+        expression = fn.call(vm);
+      } catch (e) {
+        expression = exp;
+      }
+      let bindUpdate;
+      el.removeAttribute(`:${bindProperty}`);
+      if (typeof expression === "object") {
+        bindUpdate = function() {
+          let obj = fn.call(vm);
+          Object.keys(obj).forEach(key => {
+            el[bindProperty][key] = obj[key];
+          });
+        };
+      } else {
+        // bind 指令处理
+      }
+      dir = new Directive(
+        dirName,
+        typeof expression === "object" ? bindUpdate : exp,
+        el,
+        vm,
+        {
+          bindProperty
+        }
+      );
       dirs.push(dir);
     }
   });

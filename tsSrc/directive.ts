@@ -7,12 +7,17 @@ class Directive implements DirectiveIF {
   _watcher: WatcherIF;
   name: string;
   expOrFn: any;
-  constructor(name, expOrFn, el, vm) {
+  constructor(name, expOrFn, el, vm, options?) {
     this.vm = vm;
     this.el = el;
     this.name = name;
     this.expOrFn = expOrFn;
     this.vm._directives.push(this);
+
+    // bind 属性
+    if (options) {
+      Object.assign(this, options);
+    }
 
     const isFn = typeof expOrFn === "function";
 

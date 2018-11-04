@@ -323,19 +323,38 @@
       }
   };
 
+  var bind = {
+      bind: function () {
+          this.attr = this.bindProperty;
+      },
+      update: function (value) {
+          if (typeof value === "object") {
+              Object.assign(this.el[this.attr], value);
+          }
+          else {
+              this.el[this.attr] = value;
+          }
+      }
+  };
+
   var Dirs = {
       text: text,
       html: html,
-      model: model
+      model: model,
+      bind: bind
   };
 
   var Directive = /** @class */ (function () {
-      function Directive(name, expOrFn, el, vm) {
+      function Directive(name, expOrFn, el, vm, options) {
           this.vm = vm;
           this.el = el;
           this.name = name;
           this.expOrFn = expOrFn;
           this.vm._directives.push(this);
+          // bind 属性
+          if (options) {
+              Object.assign(this, options);
+          }
           var isFn = typeof expOrFn === "function";
           var def = Dirs[name];
           if (isFn) {
@@ -427,6 +446,7 @@
   }
   function parseDirectives(attrs, el, vm) {
       var dirRE = /k-([^.:]+)/;
+      var bindRE = /^:([^.:]+)/;
       var dir;
       var dirs = [];
       var name;
@@ -440,6 +460,32 @@
               // 匹配到指令
               dirName = matched[1];
               dir = new Directive(dirName, expression, el, vm);
+              dirs.push(dir);
+          }
+          else if ((matched = name.match(bindRE))) {
+              var bindProperty_1 = matched[1];
+              dirName = "bind";
+              var exp = expression;
+              var fn_1 = new Function("return " + expression);
+              try {
+                  expression = fn_1.call(vm);
+              }
+              catch (e) {
+                  expression = exp;
+              }
+              var bindUpdate = void 0;
+              el.removeAttribute(":" + bindProperty_1);
+              if (typeof expression === "object") {
+                  bindUpdate = function () {
+                      var obj = fn_1.call(vm);
+                      Object.keys(obj).forEach(function (key) {
+                          el[bindProperty_1][key] = obj[key];
+                      });
+                  };
+              }
+              dir = new Directive(dirName, typeof expression === "object" ? bindUpdate : exp, el, vm, {
+                  bindProperty: bindProperty_1
+              });
               dirs.push(dir);
           }
       });
