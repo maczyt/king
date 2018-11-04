@@ -16,7 +16,6 @@ function compileRoot(el, vm) {
 
 function compileNodeList(nodeList: NodeList, vm) {
   toArray(nodeList).forEach(node => {
-    compileNode(node, vm);
     if (
       node.nodeType === 1 &&
       node["tagName"] !== "SCRIPT" &&
@@ -24,6 +23,9 @@ function compileNodeList(nodeList: NodeList, vm) {
     ) {
       compileNodeList(node.childNodes, vm);
     }
+    // 编译当前节点要在子节点编译后，深度优先
+    // 不然编译元素节点，会把文本填进去，导致又生成文本节点.
+    compileNode(node, vm);
   });
 }
 
@@ -41,7 +43,21 @@ function compileElement(el, vm) {
   parseDirectives(attrs, el, vm);
 }
 
-function compileTextNode(textNode, vm) {}
+function compileTextNode(textNode, vm) {
+  const textRE = /\{\{([^}]+)\}\}/;
+  const data = textNode.data;
+  let matched;
+  let dirName = "text";
+  let expression;
+  let dir;
+  if ((matched = data.match(textRE))) {
+    expression = matched[1].trim();
+    dir = new Directive(dirName, expression, textNode, vm);
+  }
+  if (dir) {
+    dir._bind();
+  }
+}
 
 function parseDirectives(attrs, el, vm: KingIF) {
   const dirRE = /k-([^.:]+)/;

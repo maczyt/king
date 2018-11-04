@@ -387,12 +387,14 @@
   }
   function compileNodeList(nodeList, vm) {
       toArray(nodeList).forEach(function (node) {
-          compileNode(node, vm);
           if (node.nodeType === 1 &&
               node["tagName"] !== "SCRIPT" &&
               node.hasChildNodes()) {
               compileNodeList(node.childNodes, vm);
           }
+          // 编译当前节点要在子节点编译后，深度优先
+          // 不然编译元素节点，会把文本填进去，导致又生成文本节点.
+          compileNode(node, vm);
       });
   }
   function compileNode(node, vm) {
@@ -400,11 +402,28 @@
       if (type === 1 && node.tagName !== "SCRIPT") {
           compileElement(node, vm);
       }
-      else if (type === 3 && node.data.trim()) ;
+      else if (type === 3 && node.data.trim()) {
+          compileTextNode(node, vm);
+      }
   }
   function compileElement(el, vm) {
       var attrs = el.attributes;
       parseDirectives(attrs, el, vm);
+  }
+  function compileTextNode(textNode, vm) {
+      var textRE = /\{\{([^}]+)\}\}/;
+      var data = textNode.data;
+      var matched;
+      var dirName = "text";
+      var expression;
+      var dir;
+      if ((matched = data.match(textRE))) {
+          expression = matched[1].trim();
+          dir = new Directive(dirName, expression, textNode, vm);
+      }
+      if (dir) {
+          dir._bind();
+      }
   }
   function parseDirectives(attrs, el, vm) {
       var dirRE = /k-([^.:]+)/;
