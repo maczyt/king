@@ -16,6 +16,11 @@ module.exports = {
         ['compile.md', 'html处理'],
         ['computed.md', 'computed处理']
       ]
+    }, {
+      title: '第三方',
+      children: [
+        ['/helper/kingx.md', 'Kingx状态管理']
+      ]
     }],
   },
 
