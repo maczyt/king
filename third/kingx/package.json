@@ -1,0 +1,14 @@
+{
+  "name": "kingx",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "rollup": "^0.67.0",
+    "rollup-plugin-typescript2": "^0.17.2",
+    "typescript": "^3.1.6"
+  }
+}
